@@ -1,0 +1,11 @@
+.build/
+
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
+__pycache__/
+*.pyc
+
+.venv/

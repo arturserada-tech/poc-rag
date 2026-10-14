@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG in AWS</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 780px; margin: 2.5rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.35rem; }
+  .card { border: 1px solid #8884; border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
+  .card h2 { margin: 0 0 .7rem; font-size: 1rem; }
+  button { font: inherit; padding: .45rem 1rem; border-radius: 8px; border: 1px solid #8886; background: #2d6cdf; color: #fff; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: wait; }
+  input[type=text] { width: 100%; box-sizing: border-box; padding: .5rem; border-radius: 8px; border: 1px solid #8886; font: inherit; }
+  #answer { white-space: pre-wrap; line-height: 1.5; margin-top: .8rem; }
+  .src { border-top: 1px dashed #8884; padding: .5rem 0; font-size: .9rem; }
+  .src summary { cursor: pointer; color: #2d6cdf; }
+  .src .snip { color: #888; white-space: pre-wrap; margin-top: .3rem; }
+  .score { float: right; color: #888; }
+</style>
+</head>
+<body>
+<h1>RAG in AWS</h1>
+
+<div class="card">
+  <h2>Ask a question</h2>
+  <input type="text" id="q" placeholder="Ask something about the ingested documents">
+  <button id="queryBtn" style="margin-top:.6rem">Ask</button>
+  <div id="answer"></div>
+  <div id="sources"></div>
+</div>
+
+<script>
+const API = "__API_URL__";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+$('queryBtn').onclick = async () => {
+  const q = $('q').value.trim();
+  if (!q) return;
+  $('queryBtn').disabled = true;
+  $('answer').textContent = 'Thinking...';
+  $('sources').innerHTML = '';
+  try {
+    const r = await fetch(API + 'query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q }),
+    }).then((x) => x.json());
+    if (r.error) throw new Error(r.error);
+    $('answer').textContent = r.answer || '';
+    $('sources').innerHTML = (r.sources || []).map((s) =>
+      `<div class="src"><span class="score">distance ${Number(s.distance).toFixed(3)}</span>` +
+      `<summary>[${esc(s.n)}] ${esc(s.source)} - page ${esc(s.page)}</summary>` +
+      `<div class="snip">${esc(s.text)}</div></div>`).join('');
+  } catch (e) {
+    $('answer').textContent = 'Error: ' + e.message;
+  }
+  $('queryBtn').disabled = false;
+};
+
+$('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('queryBtn').onclick(); });
+</script>
+</body>
+</html>
