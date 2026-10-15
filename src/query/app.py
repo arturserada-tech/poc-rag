@@ -80,7 +80,6 @@ def respond(status_code, payload):
         "statusCode": status_code,
         "headers": {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
         },
         "body": json.dumps(payload),
     }

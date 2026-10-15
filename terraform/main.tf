@@ -349,7 +349,7 @@ resource "aws_lambda_function_url" "query" {
   authorization_type = "NONE"
 
   cors {
-    allow_origins = ["http://${aws_s3_bucket_website_configuration.site.website_endpoint}"]
+    allow_origins = ["*"]
     allow_methods = ["POST", "OPTIONS"]
     allow_headers = ["content-type"]
     max_age       = 300
